@@ -1,0 +1,13 @@
+services:
+  rabbitmq:
+    image: "rabbitmq:3.13-management"
+    container_name: zelo-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "1883:1883"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    command: >
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_management rabbitmq_mqtt && rabbitmq-server"
