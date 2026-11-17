@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler())
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas públicas: Auth, Swagger, H2 Console, Simulação
+                        // Rotas públicas: Auth, Swagger, H2 Console, Simulação, Healthcheck
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/auth/**",
@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/h2-console/**",
-                                "/api/v1/simulacao/**"
+                                "/api/v1/simulacao/**",
+                                "/api/v1/health",
+                                "/health"
                         ).permitAll()
 
                         // Endpoints de Emergência e Check-in
@@ -64,6 +66,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/casas/*/status").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/alertas/**").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
 
+                        // Endpoints espelho de Cuidado e Insights (Lembretes, Contatos, Resumos)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/casas/*/resumos").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/casas/*/dias-atipicos").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/casas/*/rede-apoio").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
+                        .requestMatchers("/api/v1/idosos/**").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
+                        .requestMatchers("/api/v1/lembretes/**").hasAnyRole("CUIDADOR", "IDOSO", "ADMIN")
+
                         // Abertura externa de alertas (ex.: R5 - Lembrete)
                         .requestMatchers(HttpMethod.POST, "/api/v1/alertas").hasAnyRole("SERVICO", "ADMIN", "CUIDADOR")
 
@@ -72,7 +81,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/casas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/casas/**").hasRole("ADMIN")
 
-                        // Demais requisições autenticadas (incluindo GET /api/v1/casas e endpoints espelho)
+                        // Demais requisições autenticadas (incluindo GET /api/v1/casas)
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

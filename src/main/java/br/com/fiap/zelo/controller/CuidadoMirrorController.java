@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -31,52 +32,85 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CuidadoMirrorController {
 
     private final Map<UUID, Map<String, Object>> lembretes = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<String, Object>> registrosHoje = new ConcurrentHashMap<>();
     private final Map<UUID, List<Map<String, Object>>> contatosPorIdoso = new ConcurrentHashMap<>();
 
-    private static final UUID IDOSO_DONA_MARIA = UUID.fromString("00000000-0000-0000-0000-000000000010");
-    private static final UUID CASA_DONA_MARIA = UUID.fromString("00000000-0000-0000-0000-000000000100");
+    public static final UUID IDOSO_DONA_MARIA = UUID.fromString("00000000-0000-0000-0000-000000000010");
+    public static final UUID CASA_DONA_MARIA = UUID.fromString("00000000-0000-0000-0000-000000000100");
+    public static final UUID LEMBRETE_1_ID = UUID.fromString("00000000-0000-0000-0000-000000002001");
+    public static final UUID REGISTRO_1_ID = UUID.fromString("00000000-0000-0000-0000-000000003001");
 
     public CuidadoMirrorController() {
-        // Lembretes iniciais da Dona Maria
-        UUID lembrete1Id = UUID.fromString("00000000-0000-0000-0000-000000000501");
+        // Lembrete inicial 1: Remédio de pressão (Losartana 50mg)
         Map<String, Object> l1 = new HashMap<>();
-        l1.put("id", lembrete1Id);
+        l1.put("id", LEMBRETE_1_ID);
         l1.put("idosoId", IDOSO_DONA_MARIA);
-        l1.put("titulo", "Losartana 50mg");
+        l1.put("titulo", "Remédio da pressão (Losartana 50mg)");
+        l1.put("descricao", "Remédio da pressão (Losartana 50mg)");
+        l1.put("texto", "Remédio da pressão (Losartana 50mg)");
+        l1.put("horario", "08:00");
         l1.put("horarioPrevisto", "08:00");
         l1.put("dosagem", "1 comprimido pela manhã");
+        l1.put("diasSemana", "SEG,TER,QUA,QUI,SEX,SAB,DOM");
         l1.put("ativo", true);
-        lembretes.put(lembrete1Id, l1);
+        l1.put("criadoEm", Instant.now().toString());
+        lembretes.put(LEMBRETE_1_ID, l1);
 
-        UUID lembrete2Id = UUID.fromString("00000000-0000-0000-0000-000000000502");
-        Map<String, Object> l2 = new HashMap<>();
-        l2.put("id", lembrete2Id);
-        l2.put("idosoId", IDOSO_DONA_MARIA);
-        l2.put("titulo", "Metformina 850mg");
-        l2.put("horarioPrevisto", "12:30");
-        l2.put("dosagem", "1 comprimido no almoço");
-        l2.put("ativo", true);
-        lembretes.put(lembrete2Id, l2);
+        // Registro de hoje inicial para o lembrete 1
+        Map<String, Object> r1 = new HashMap<>();
+        r1.put("id", REGISTRO_1_ID);
+        r1.put("registroId", REGISTRO_1_ID);
+        r1.put("lembreteId", LEMBRETE_1_ID);
+        r1.put("idosoId", IDOSO_DONA_MARIA);
+        r1.put("titulo", "Remédio da pressão (Losartana 50mg)");
+        r1.put("descricao", "Remédio da pressão (Losartana 50mg)");
+        r1.put("horario", "08:00");
+        r1.put("horarioPrevisto", "08:00");
+        r1.put("status", "PENDENTE");
+        r1.put("tomado", false);
+        r1.put("tomadoEm", null);
+        r1.put("dataPrevista", LocalDate.now().toString());
+        registrosHoje.put(REGISTRO_1_ID, r1);
 
-        // Contatos da Dona Maria
+        // Contatos da Dona Maria (Ana e Seu José)
         List<Map<String, Object>> contatos = new ArrayList<>();
-        contatos.add(Map.of(
-                "contatoId", UUID.fromString("00000000-0000-0000-0000-000000000002"),
-                "nome", "Ana (Filha)",
-                "papel", "FAMILIAR",
-                "ordem", 1,
-                "telefone", "+5511999990002",
-                "canal", "WHATSAPP"
-        ));
-        contatos.add(Map.of(
-                "contatoId", UUID.fromString("00000000-0000-0000-0000-000000000003"),
-                "nome", "Seu José (Vizinho)",
-                "papel", "GUARDIAO",
-                "ordem", 2,
-                "telefone", "+5511999990003",
-                "canal", "LIGACAO"
-        ));
+        UUID contato1Id = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        Map<String, Object> c1 = new HashMap<>();
+        c1.put("id", contato1Id);
+        c1.put("contatoId", contato1Id);
+        c1.put("idosoId", IDOSO_DONA_MARIA);
+        c1.put("nome", "Ana (Filha)");
+        c1.put("papel", "FAMILIAR");
+        c1.put("parentesco", "Filha");
+        c1.put("telefone", "+5511999990002");
+        c1.put("ordem", 1);
+        c1.put("ordemPrioridade", 1);
+        c1.put("canal", "WHATSAPP");
+        c1.put("notificarPor", "WHATSAPP");
+        contatos.add(c1);
+
+        UUID contato2Id = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        Map<String, Object> c2 = new HashMap<>();
+        c2.put("id", contato2Id);
+        c2.put("contatoId", contato2Id);
+        c2.put("idosoId", IDOSO_DONA_MARIA);
+        c2.put("nome", "Seu José (Vizinho)");
+        c2.put("papel", "GUARDIAO");
+        c2.put("parentesco", "Vizinho");
+        c2.put("telefone", "+5511999990003");
+        c2.put("ordem", 2);
+        c2.put("ordemPrioridade", 2);
+        c2.put("canal", "LIGACAO");
+        c2.put("notificarPor", "LIGACAO");
+        contatos.add(c2);
+
         contatosPorIdoso.put(IDOSO_DONA_MARIA, contatos);
+    }
+
+    @GetMapping("/health")
+    @Operation(summary = "Healthcheck do serviço zelo-monitor")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of("status", "UP", "servico", "zelo-monitor"));
     }
 
     @GetMapping("/idosos/{id}/lembretes")
@@ -98,8 +132,42 @@ public class CuidadoMirrorController {
         Map<String, Object> novoLembrete = new HashMap<>(body);
         novoLembrete.put("id", novoId);
         novoLembrete.put("idosoId", id);
-        if (!novoLembrete.containsKey("ativo")) novoLembrete.put("ativo", true);
+
+        String desc = (String) body.getOrDefault("descricao", body.getOrDefault("titulo", body.getOrDefault("texto", "Lembrete")));
+        novoLembrete.put("descricao", desc);
+        novoLembrete.put("titulo", desc);
+        novoLembrete.put("texto", desc);
+
+        String hora = (String) body.getOrDefault("horario", body.getOrDefault("horarioPrevisto", "08:00"));
+        novoLembrete.put("horario", hora);
+        novoLembrete.put("horarioPrevisto", hora);
+
+        if (!novoLembrete.containsKey("diasSemana")) {
+            novoLembrete.put("diasSemana", "SEG,TER,QUA,QUI,SEX,SAB,DOM");
+        }
+        if (!novoLembrete.containsKey("ativo")) {
+            novoLembrete.put("ativo", true);
+        }
+        novoLembrete.put("criadoEm", Instant.now().toString());
         lembretes.put(novoId, novoLembrete);
+
+        // Cria registro de hoje correspondente
+        UUID regId = UUID.randomUUID();
+        Map<String, Object> reg = new HashMap<>();
+        reg.put("id", regId);
+        reg.put("registroId", regId);
+        reg.put("lembreteId", novoId);
+        reg.put("idosoId", id);
+        reg.put("titulo", desc);
+        reg.put("descricao", desc);
+        reg.put("horario", hora);
+        reg.put("horarioPrevisto", hora);
+        reg.put("status", "PENDENTE");
+        reg.put("tomado", false);
+        reg.put("tomadoEm", null);
+        reg.put("dataPrevista", LocalDate.now().toString());
+        registrosHoje.put(regId, reg);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(novoLembrete);
     }
 
@@ -114,7 +182,28 @@ public class CuidadoMirrorController {
             existente.put("id", id);
         }
         existente.putAll(body);
+
+        String desc = (String) existente.getOrDefault("descricao", existente.getOrDefault("titulo", existente.getOrDefault("texto", "Lembrete")));
+        existente.put("descricao", desc);
+        existente.put("titulo", desc);
+        existente.put("texto", desc);
+
+        String hora = (String) existente.getOrDefault("horario", existente.getOrDefault("horarioPrevisto", "08:00"));
+        existente.put("horario", hora);
+        existente.put("horarioPrevisto", hora);
+
         lembretes.put(id, existente);
+
+        // Atualiza registros de hoje vinculados
+        for (Map<String, Object> reg : registrosHoje.values()) {
+            if (id.equals(reg.get("lembreteId"))) {
+                reg.put("descricao", desc);
+                reg.put("titulo", desc);
+                reg.put("horario", hora);
+                reg.put("horarioPrevisto", hora);
+            }
+        }
+
         return ResponseEntity.ok(existente);
     }
 
@@ -123,21 +212,15 @@ public class CuidadoMirrorController {
     @Operation(summary = "Remove um lembrete")
     public ResponseEntity<Void> removerLembrete(@PathVariable UUID id) {
         lembretes.remove(id);
+        registrosHoje.values().removeIf(reg -> id.equals(reg.get("lembreteId")));
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/idosos/{id}/lembretes/hoje")
     @Operation(summary = "Lista os lembretes com status do dia para o idoso")
     public ResponseEntity<List<Map<String, Object>>> listarLembretesHoje(@PathVariable UUID id) {
-        List<Map<String, Object>> result = lembretes.values().stream()
-                .filter(l -> id.equals(l.get("idosoId")))
-                .map(l -> {
-                    Map<String, Object> item = new HashMap<>(l);
-                    item.put("registroId", UUID.randomUUID());
-                    item.put("dataPrevista", LocalDate.now().toString());
-                    item.put("status", "PENDENTE");
-                    return item;
-                })
+        List<Map<String, Object>> result = registrosHoje.values().stream()
+                .filter(r -> id.equals(r.get("idosoId")))
                 .toList();
         return ResponseEntity.ok(result);
     }
@@ -145,11 +228,27 @@ public class CuidadoMirrorController {
     @PostMapping("/lembretes/registros/{id}/confirmacao")
     @Operation(summary = "Confirma a tomada do medicamento pelo idoso")
     public ResponseEntity<Map<String, Object>> confirmarTomada(@PathVariable UUID id) {
-        return ResponseEntity.ok(Map.of(
-                "registroId", id,
-                "status", "CONFIRMADO",
-                "confirmadoEm", LocalTime.now().toString()
-        ));
+        Map<String, Object> registro = registrosHoje.get(id);
+        if (registro == null) {
+            // Tenta encontrar por lembreteId ou id de fallback
+            registro = registrosHoje.values().stream()
+                    .filter(r -> id.equals(r.get("lembreteId")) || id.equals(r.get("id")) || id.equals(r.get("registroId")))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if (registro == null) {
+            registro = new HashMap<>();
+            registro.put("id", id);
+            registro.put("registroId", id);
+            registrosHoje.put(id, registro);
+        }
+
+        registro.put("status", "CONFIRMADO");
+        registro.put("tomado", true);
+        registro.put("tomadoEm", LocalTime.now().toString());
+
+        return ResponseEntity.ok(registro);
     }
 
     @GetMapping("/idosos/{id}/contatos")
@@ -166,9 +265,25 @@ public class CuidadoMirrorController {
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
         List<Map<String, Object>> lista = contatosPorIdoso.computeIfAbsent(id, k -> new ArrayList<>());
+        UUID cid = body.containsKey("contatoId") ? (UUID) body.get("contatoId") : UUID.randomUUID();
+
         Map<String, Object> novoContato = new HashMap<>(body);
-        if (!novoContato.containsKey("contatoId")) novoContato.put("contatoId", UUID.randomUUID());
-        novoContato.put("ordem", lista.size() + 1);
+        novoContato.put("id", cid);
+        novoContato.put("contatoId", cid);
+        novoContato.put("idosoId", id);
+
+        int ordem = lista.size() + 1;
+        novoContato.put("ordem", ordem);
+        novoContato.put("ordemPrioridade", ordem);
+
+        String canal = (String) body.getOrDefault("canal", body.getOrDefault("notificarPor", "WHATSAPP"));
+        novoContato.put("canal", canal);
+        novoContato.put("notificarPor", canal);
+
+        String papel = (String) body.getOrDefault("papel", body.getOrDefault("parentesco", "FAMILIAR"));
+        novoContato.put("papel", papel);
+        novoContato.put("parentesco", papel);
+
         lista.add(novoContato);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoContato);
     }
@@ -185,29 +300,42 @@ public class CuidadoMirrorController {
 
     @GetMapping("/casas/{id}/resumos")
     @Operation(summary = "Retorna o resumo analítico semanal da rotina gerado pelo Zelo Insights")
-    public ResponseEntity<Map<String, Object>> obterResumoSemanal(@PathVariable UUID id) {
-        return ResponseEntity.ok(Map.of(
+    public ResponseEntity<List<Map<String, Object>>> obterResumoSemanal(@PathVariable UUID id) {
+        Map<String, Object> metricas = Map.of(
+                "totalEventosPresenca", 342,
+                "horarioLevantarMedio", "07:22",
+                "diasAtipicos", 1,
+                "lembretesCumpridosPct", 95
+        );
+
+        Map<String, Object> resumo = Map.of(
                 "casaId", id,
-                "periodo", "Últimos 7 dias",
-                "indiceRegularidadeRotina", 92,
-                "tempoMedioBanheiroMin", 18,
-                "horarioMedioLevantar", "07:22",
-                "desviosDetectados", 1,
-                "statusGeral", "ESTAVEL",
-                "observacao", "Dona Maria mantém padrão diário estável, com pequenas variações nos finais de semana."
-        ));
+                "semanaInicio", LocalDate.now().minusDays(7).toString(),
+                "texto", "Dona Maria apresentou rotina consistente ao longo da semana, com média de despertar às 07:22 e uso regular do banheiro (média de 18 min). Apenas 1 dia atípico registrado.",
+                "metricas", metricas,
+                "modelo", "GPT-4o-mini (Zelo Insights)",
+                "geradoEm", Instant.now().toString()
+        );
+
+        return ResponseEntity.ok(List.of(resumo));
     }
 
     @GetMapping("/casas/{id}/dias-atipicos")
     @Operation(summary = "Lista os dias com desvios atípicos de rotina identificados")
     public ResponseEntity<List<Map<String, Object>>> listarDiasAtipicos(@PathVariable UUID id) {
-        return ResponseEntity.ok(List.of(
-                Map.of(
-                        "data", LocalDate.now().minusDays(2).toString(),
-                        "tipo", "BANHEIRO_LONGO",
-                        "descricao", "Dona Maria permaneceu 35 min no banheiro (habitual: 18 min)",
-                        "gravidade", "MEDIA"
-                )
-        ));
+        Map<String, Object> atributos = Map.of(
+                "levantarMinutos", 450,
+                "eventosMadrugada", 3,
+                "tempoSemMovimentoMax", 180
+        );
+
+        Map<String, Object> diaAtipico = Map.of(
+                "data", LocalDate.now().minusDays(2).toString(),
+                "score", 0.82,
+                "atipico", true,
+                "atributos", atributos
+        );
+
+        return ResponseEntity.ok(List.of(diaAtipico));
     }
 }

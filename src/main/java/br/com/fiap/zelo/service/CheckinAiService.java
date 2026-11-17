@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -23,10 +24,12 @@ public class CheckinAiService {
     private final ObjectMapper objectMapper;
 
     private static final List<String> PALAVRAS_RISCO = List.of(
-            "caí", "cai", "queda", "dor", "tonta", "tonto", "ajuda", "socorro",
+            "caí", "cai", "queda", "tonta", "tonto", "ajuda", "socorro",
             "falta de ar", "não consigo", "nao consigo", "mal", "fraca", "fraco",
             "sangue", "peito", "esquisita", "esquisito"
     );
+
+    private static final Pattern PATTERN_DOR = Pattern.compile(".*\\bdores?\\b.*", Pattern.CASE_INSENSITIVE);
 
     private static final List<String> PALAVRAS_BEM_ESTAR = List.of(
             "estou bem", "tô bem", "to bem", "tudo bem", "tudo certo",
@@ -86,7 +89,6 @@ public class CheckinAiService {
                 String content = response.getResult().getOutput().getContent();
 
                 if (content != null && !content.isBlank()) {
-                    // Limpa possíveis marcadores markdown de bloco de código ```json ... ```
                     String cleanJson = content.trim();
                     if (cleanJson.startsWith("```")) {
                         cleanJson = cleanJson.replaceFirst("^```json\\s*", "")
@@ -161,6 +163,9 @@ public class CheckinAiService {
     public boolean contemPalavraRisco(String texto) {
         if (texto == null) return false;
         String lower = texto.toLowerCase();
+        if (PATTERN_DOR.matcher(lower).matches()) {
+            return true;
+        }
         return PALAVRAS_RISCO.stream().anyMatch(lower::contains);
     }
 

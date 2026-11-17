@@ -155,19 +155,20 @@ public class MotorRegrasService {
             }
         }
 
+        // Verifica se houve evento interno hoje após as 04:00
+        boolean teveEventoHoje = false;
+        if (casa.getUltimoEventoEm() != null) {
+            ZonedDateTime ultimoEventoSp = casa.getUltimoEventoEm().atZone(ZONE_SP);
+            if (ultimoEventoSp.toLocalDate().isEqual(dataAtual)
+                    && !ultimoEventoSp.toLocalTime().isBefore(LocalTime.of(4, 0))
+                    && !"ENTRADA".equalsIgnoreCase(casa.getUltimoComodo())) {
+                teveEventoHoje = true;
+            }
+        }
+
         // 2. R1 - Sem atividade matinal (ATENCAO)
         // No dia atual, entre 04:00 e 12:00, sem evento interno hoje, e horaAtual >= horarioHabitual + toleranciaMatinal
         if (!horaAtual.isBefore(LocalTime.of(4, 0)) && horaAtual.isBefore(LocalTime.of(12, 0))) {
-            boolean teveEventoHoje = false;
-            if (casa.getUltimoEventoEm() != null) {
-                ZonedDateTime ultimoEventoSp = casa.getUltimoEventoEm().atZone(ZONE_SP);
-                if (ultimoEventoSp.toLocalDate().isEqual(dataAtual)
-                        && !ultimoEventoSp.toLocalTime().isBefore(LocalTime.of(4, 0))
-                        && !"ENTRADA".equalsIgnoreCase(casa.getUltimoComodo())) {
-                    teveEventoHoje = true;
-                }
-            }
-
             if (!teveEventoHoje) {
                 IntegracaoExternaService.PerfilRotinaDto perfil = integracaoExternaService.buscarPerfilRotina(casa.getId());
                 String horarioBase = (perfil != null && perfil.horarioHabitualLevantar() != null)
@@ -194,21 +195,24 @@ public class MotorRegrasService {
         }
 
         // 3. R4 - Inatividade prolongada (ATENCAO)
-        // Entre 07:00 e 22:00, tempo sem evento >= limiteInatividadeMin (240 min = 4h)
-        if (!horaAtual.isBefore(LocalTime.of(7, 0)) && horaAtual.isBefore(LocalTime.of(22, 0))) {
-            if (casa.getUltimoEventoEm() != null) {
-                long minutosInativo = Duration.between(casa.getUltimoEventoEm(), agora).toMinutes();
-                if (minutosInativo >= config.getLimiteInatividadeMin()) {
-                    log.warn("Disparo R4 na casa {}: inatividade de {} min (limite {})",
-                            casa.getId(), minutosInativo, config.getLimiteInatividadeMin());
-                    maquinaEstadosService.abrirAlerta(
-                            casa.getId(),
-                            RegraTipo.R4,
-                            GravidadeAlerta.ATENCAO,
-                            OrigemAlerta.SENSOR,
-                            "Inatividade prolongada detectada: " + minutosInativo + " minutos sem eventos",
-                            agora
-                    );
+        // Entre 07:00 e 22:00, tempo sem evento >= limiteInatividadeMin (240 min = 4h).
+        // Se a pessoa ainda não acordou (antes das 12:00 sem evento hoje), R1 é quem governa a ausência de atividade matinal.
+        if (teveEventoHoje || !horaAtual.isBefore(LocalTime.of(12, 0))) {
+            if (!horaAtual.isBefore(LocalTime.of(7, 0)) && horaAtual.isBefore(LocalTime.of(22, 0))) {
+                if (casa.getUltimoEventoEm() != null) {
+                    long minutosInativo = Duration.between(casa.getUltimoEventoEm(), agora).toMinutes();
+                    if (minutosInativo >= config.getLimiteInatividadeMin()) {
+                        log.warn("Disparo R4 na casa {}: inatividade de {} min (limite {})",
+                                casa.getId(), minutosInativo, config.getLimiteInatividadeMin());
+                        maquinaEstadosService.abrirAlerta(
+                                casa.getId(),
+                                RegraTipo.R4,
+                                GravidadeAlerta.ATENCAO,
+                                OrigemAlerta.SENSOR,
+                                "Inatividade prolongada detectada: " + minutosInativo + " minutos sem eventos",
+                                agora
+                        );
+                    }
                 }
             }
         }
