@@ -16,6 +16,12 @@ Serviço central (`zelo-monitor`) em **Java com Spring Boot 3.2.4 e Java 17** pa
 
 ---
 
+## 🎥 Vídeo Demonstrativo (Pitch GS)
+
+- **Link no YouTube:** [https://youtu.be/tu2Uynehp2Q](https://youtu.be/tu2Uynehp2Q)
+
+---
+
 ## Requisitos Atendidos na Solução
 
 1. **Requisito 1: API REST do Domínio (20 pts):**
